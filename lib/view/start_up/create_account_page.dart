@@ -1,6 +1,10 @@
 import 'dart:io';
 
+import 'package:chat_firebase_practice/model/account.dart';
 import 'package:chat_firebase_practice/utils/authentication.dart';
+import 'package:chat_firebase_practice/utils/firestore/users.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -27,6 +31,15 @@ class _CreateAccountPageState extends State<CreateAccountPage>{
         image = File(pickedFile.path);
       });
     }
+  }
+
+  Future<String>uploadImage(String uid)async{
+    final FirebaseStorage storageInstance = FirebaseStorage.instance;
+    final Reference ref = storageInstance.ref();
+    await ref.child(uid).putFile(image!);
+    String downloadUrl = await storageInstance.ref(uid).getDownloadURL();
+    print('image_path: $downloadUrl');
+    return downloadUrl;
   }
 
   @override
@@ -115,8 +128,19 @@ class _CreateAccountPageState extends State<CreateAccountPage>{
                     && selfIntroductionController.text.isNotEmpty){
                   var result = await Authentication.signUp(email: emailController.text, pass: passController.text);
                   Navigator.pop(context);
-                  if(result ==true){
-                    Navigator.pop(context);
+                  if(result == UserCredential){
+                    String imagePath = await uploadImage(result.user!.uid);
+                    Account newAccount = Account(
+                      id: result.user!.uid,
+                      name: nameController.text,
+                      userId: userIDController.text,
+                      selfIntroduction: selfIntroductionController.text,
+                      imagePath: imagePath,
+                    );
+                    var _result = await UserFireStore.setUser(newAccount);
+                    if(_result ==true){
+                      Navigator.pop(context);
+                    }
                   }
                 }
               }, child: Text('アカウントを作成'))
