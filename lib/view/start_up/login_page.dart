@@ -1,3 +1,4 @@
+import 'package:chat_firebase_practice/utils/authentication.dart';
 import 'package:chat_firebase_practice/view/screen.dart';
 import 'package:chat_firebase_practice/view/start_up/create_account_page.dart';
 import 'package:flutter/gestures.dart';
@@ -62,8 +63,11 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(height: 30),
               ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Screen()));
+                  onPressed: () async{
+                    var result = await Authentication.emailSignIn(email: emailController.text, pass: passController.text);
+                    if(result == true){
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Screen()));
+                    }
                   }, child: Text('emailでログイン'))
             ],
           ),
